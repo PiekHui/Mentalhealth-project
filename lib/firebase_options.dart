@@ -41,49 +41,48 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyD1zOGvzoAsVHewlRIslp16Jq5P3tnFa-I',
-    appId: '1:148217355085:ios:b2531b4861629895d33504',
-    messagingSenderId: '148217355085',
-    projectId: 'fir-authpet',
-    storageBucket: 'fir-authpet.firebasestorage.app',
-    iosBundleId: 'com.example.helloworld',
+    apiKey: 'AIzaSyCny7yrzEVPHW60BTpWT2jW2MHigwhQWdk',
+    appId: '1:676691628959:ios:YOUR_IOS_APP_ID',
+    messagingSenderId: '676691628959',
+    projectId: 'mentalhealth-project-a1809',
+    storageBucket: 'mentalhealth-project-a1809.firebasestorage.app',
+    iosBundleId: 'com.example.petapp',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyD1zOGvzoAsVHewlRIslp16Jq5P3tnFa-I',
-    appId: '1:148217355085:ios:b2531b4861629895d33504',
-    messagingSenderId: '148217355085',
-    projectId: 'fir-authpet',
-    storageBucket: 'fir-authpet.firebasestorage.app',
-    iosBundleId: 'com.example.helloworld',
+    apiKey: 'AIzaSyCny7yrzEVPHW60BTpWT2jW2MHigwhQWdk',
+    appId: '1:676691628959:ios:YOUR_IOS_APP_ID',
+    messagingSenderId: '676691628959',
+    projectId: 'mentalhealth-project-a1809',
+    storageBucket: 'mentalhealth-project-a1809.firebasestorage.app',
+    iosBundleId: 'com.example.petapp',
   );
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDLD5ASAA26u8kf-Q2Q1RxOQw3x86kBrSQ',
-    appId: '1:148217355085:web:cc8b3d17500f47abd33504',
-    messagingSenderId: '148217355085',
-    projectId: 'fir-authpet',
-    authDomain: 'fir-authpet.firebaseapp.com',
-    storageBucket: 'fir-authpet.firebasestorage.app',
-    measurementId: 'G-VZ21Y9XTXQ',
+    apiKey: "AIzaSyCny7yrzEVPHW60BTpWT2jW2MHigwhQWdk",
+    authDomain: "mentalhealth-project-a1809.firebaseapp.com",
+    projectId: "mentalhealth-project-a1809",
+    storageBucket: "mentalhealth-project-a1809.firebasestorage.app",
+    messagingSenderId: "676691628959",
+    appId: "1:676691628959:web:da00beaa686def045c63aa",
+    measurementId: "G-BBBMYY141M",
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBS7Ijf8UW67xquipgLXgOGZ8_gC01fsOM',
-    appId: '1:148217355085:android:40f118ba63cc5e42d33504',
-    messagingSenderId: '148217355085',
-    projectId: 'fir-authpet',
-    storageBucket: 'fir-authpet.firebasestorage.app',
+    apiKey: 'AIzaSyB9vL63-RqX2v_AeL5FrRIL1xwGCoz476I',
+    appId: '1:676691628959:android:6507c318952a445a5c63aa',
+    messagingSenderId: '676691628959',
+    projectId: 'mentalhealth-project-a1809',
+    storageBucket: 'mentalhealth-project-a1809.firebasestorage.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDLD5ASAA26u8kf-Q2Q1RxOQw3x86kBrSQ',
-    appId: '1:148217355085:web:9213030f4612ce88d33504',
-    messagingSenderId: '148217355085',
-    projectId: 'fir-authpet',
-    authDomain: 'fir-authpet.firebaseapp.com',
-    storageBucket: 'fir-authpet.firebasestorage.app',
-    measurementId: 'G-WVN436CGQ8',
+    apiKey: "AIzaSyCny7yrzEVPHW60BTpWT2jW2MHigwhQWdk",
+    authDomain: "mentalhealth-project-a1809.firebaseapp.com",
+    projectId: "mentalhealth-project-a1809",
+    storageBucket: "mentalhealth-project-a1809.firebasestorage.app",
+    messagingSenderId: "676691628959",
+    appId: "1:676691628959:web:66dfd6f1d67cc7035c63aa",
+    measurementId: "G-VCFEZXS4ZT",
   );
-
 }
