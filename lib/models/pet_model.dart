@@ -16,7 +16,7 @@ bool _isSameDay(DateTime? date1, DateTime? date2) {
 
 class PetModel {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final String _userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+  String get _userId => FirebaseAuth.instance.currentUser?.uid ?? '';
 
   // Pet data structure - Simplified
   Map<String, dynamic> _petData = {

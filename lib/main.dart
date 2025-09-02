@@ -9,6 +9,8 @@ import 'screens/help_support_screen.dart';
 import 'screens/attendance_screen.dart';
 import 'dart:math';
 import 'services/gemini_service.dart';
+import 'services/openrouter_service.dart';
+import 'config/env.dart';
 import 'package:logging/logging.dart';
 import 'screens/daily_tips_screen.dart';
 import 'dart:async';
@@ -211,6 +213,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final List<ChatMessage> _messages = [];
   final TextEditingController _chatController = TextEditingController();
   final GeminiService _geminiService = GeminiService();
+  final OpenRouterService _openRouterService = OpenRouterService();
+
+  dynamic _getAi() {
+    // Simple provider switch via Env.aiProvider
+    if (Env.aiProvider == 'openrouter') {
+      return _openRouterService;
+    }
+    return _geminiService;
+  }
 
   // Add PetModel instance
   final PetModel _petModel = PetModel();
@@ -384,13 +395,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final GlobalKey<AnimatedPetState> _animatedPetKey =
       GlobalKey<AnimatedPetState>(); // Use the public 'AnimatedPetState'
 
-  String _userId = FirebaseAuth.instance.currentUser?.uid ?? ''; // Store userId
+  String get _userId => FirebaseAuth.instance.currentUser?.uid ?? '';
 
   @override
   void initState() {
     super.initState();
-    _userId =
-        FirebaseAuth.instance.currentUser?.uid ?? ''; // Ensure userId is set
+    // _userId is a getter; no assignment needed
 
     void showInitialCheckIn() async {
       final attendanceService = AttendanceService();
@@ -798,13 +808,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
       // Use the enhanced mental health response if emotional content is detected
       if (hasEmotionalContent) {
-        responseText = await _geminiService.getMentalHealthResponse(
+        responseText = await _getAi().getMentalHealthResponse(
           userMessageText,
           moodResult,
         );
       } else {
         // Otherwise use the standard chat response
-        responseText = await _geminiService.getChatResponse(
+        responseText = await _getAi().getChatResponse(
           userMessageText,
           _happiness,
           _petStatus,
@@ -2492,7 +2502,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     }
   }
 
-  // New method to load chat history for the current day
+  // load chat history for the current day
   Future<void> _loadTodaysChatHistory() async {
     if (_userId.isEmpty) return; // Don't load if no user
     print("[_loadTodaysChatHistory] Loading chat history for today...");
