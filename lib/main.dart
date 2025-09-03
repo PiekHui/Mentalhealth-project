@@ -459,6 +459,28 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateAllCooldownTimers();
     });
+
+    // Show a friendly welcome motivation once on launch if no message is active
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_currentResponse == null) {
+        _showWelcomeMotivation();
+      }
+    });
+  }
+
+  String _greetingName() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final name = user.displayName;
+      if (name != null && name.trim().isNotEmpty) {
+        return name.split(' ').first;
+      }
+      final email = user.email;
+      if (email != null && email.contains('@')) {
+        return email.split('@').first;
+      }
+    }
+    return 'there';
   }
 
   @override
@@ -1051,6 +1073,29 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     });
   }
 
+  // Short motivational welcome shown inside the pet bubble on startup
+  void _showWelcomeMotivation() {
+    if (!mounted) return;
+    final List<String> messages = [
+      "You’ve got this! One small step today matters 🐾",
+      "Proud of you for showing up. Let's make today kind ✨",
+      "Deep breath. We’ll do it together 💪",
+      "Your feelings matter. I’m here for you 💜",
+      "Little wins add up. I believe in you 🌟",
+    ];
+    final msg = messages[_random.nextInt(messages.length)];
+    setState(() {
+      _currentResponse = msg;
+    });
+    Future.delayed(const Duration(seconds: 10), () {
+      if (mounted && _currentResponse == msg) {
+        setState(() {
+          _currentResponse = null;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -1211,6 +1256,39 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                             ),
                           ),
                         ),
+                        // Welcome heading above the pet
+                        Positioned(
+                          top: constraints.maxHeight * 0.16,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Hi, ${_greetingName()}! 👋',
+                                  style: GoogleFonts.fredoka(
+                                    fontSize: constraints.maxWidth * 0.04,
+                                    fontWeight: FontWeight.w600,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Welcome to UniPaw! 🐾',
+                                  style: GoogleFonts.fredoka(
+                                    fontSize: constraints.maxWidth * 0.05,
+                                    fontWeight: FontWeight.w700,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
                         // Pet container - centered
                         Positioned(
                           top: constraints.maxHeight * 0.32,
