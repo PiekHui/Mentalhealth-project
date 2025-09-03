@@ -4,30 +4,30 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
-import 'screens/chat_history_screen.dart';
 import 'screens/help_support_screen.dart';
 import 'screens/attendance_screen.dart';
 import 'dart:math';
 import 'services/gemini_service.dart';
+import 'services/openrouter_service.dart';
+import 'config/env.dart';
 import 'package:logging/logging.dart';
 import 'screens/daily_tips_screen.dart';
 import 'dart:async';
 import 'widgets/animated_pet.dart';
+import 'screens/chat_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:ui' as ui;
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'screens/tests_list_screen.dart';
 import 'services/attendance_service.dart';
 import 'screens/diary_screen.dart'; // Add this import
-import 'services/emotion_service.dart';
 import 'models/pet_model.dart';
 import 'screens/pet_tasks_screen.dart';
+import 'screens/budget_list_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart'; // Add for date formatting
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:provider/provider.dart';
-import 'services/language_service.dart';
 
 // --- Import new screens ---
 import 'screens/profile_screen.dart';
@@ -211,6 +211,16 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final List<ChatMessage> _messages = [];
   final TextEditingController _chatController = TextEditingController();
   final GeminiService _geminiService = GeminiService();
+  final OpenRouterService _openRouterService = OpenRouterService();
+  // Removed inline chat; using dedicated ChatScreen
+
+  dynamic _getAi() {
+    // Simple provider switch via Env.aiProvider
+    if (Env.aiProvider == 'openrouter') {
+      return _openRouterService;
+    }
+    return _geminiService;
+  }
 
   // Add PetModel instance
   final PetModel _petModel = PetModel();
@@ -384,13 +394,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final GlobalKey<AnimatedPetState> _animatedPetKey =
       GlobalKey<AnimatedPetState>(); // Use the public 'AnimatedPetState'
 
-  String _userId = FirebaseAuth.instance.currentUser?.uid ?? ''; // Store userId
+  String get _userId => FirebaseAuth.instance.currentUser?.uid ?? '';
 
   @override
   void initState() {
     super.initState();
-    _userId =
-        FirebaseAuth.instance.currentUser?.uid ?? ''; // Ensure userId is set
+    // _userId is a getter; no assignment needed
 
     void showInitialCheckIn() async {
       final attendanceService = AttendanceService();
@@ -450,6 +459,28 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateAllCooldownTimers();
     });
+
+    // Show a friendly welcome motivation once on launch if no message is active
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_currentResponse == null) {
+        _showWelcomeMotivation();
+      }
+    });
+  }
+
+  String _greetingName() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final name = user.displayName;
+      if (name != null && name.trim().isNotEmpty) {
+        return name.split(' ').first;
+      }
+      final email = user.email;
+      if (email != null && email.contains('@')) {
+        return email.split('@').first;
+      }
+    }
+    return 'there';
   }
 
   @override
@@ -798,13 +829,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
       // Use the enhanced mental health response if emotional content is detected
       if (hasEmotionalContent) {
-        responseText = await _geminiService.getMentalHealthResponse(
+        responseText = await _getAi().getMentalHealthResponse(
           userMessageText,
           moodResult,
         );
       } else {
         // Otherwise use the standard chat response
-        responseText = await _geminiService.getChatResponse(
+        responseText = await _getAi().getChatResponse(
           userMessageText,
           _happiness,
           _petStatus,
@@ -1042,6 +1073,29 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     });
   }
 
+  // Short motivational welcome shown inside the pet bubble on startup
+  void _showWelcomeMotivation() {
+    if (!mounted) return;
+    final List<String> messages = [
+      "You’ve got this! One small step today matters 🐾",
+      "Proud of you for showing up. Let's make today kind ✨",
+      "Deep breath. We’ll do it together 💪",
+      "Your feelings matter. I’m here for you 💜",
+      "Little wins add up. I believe in you 🌟",
+    ];
+    final msg = messages[_random.nextInt(messages.length)];
+    setState(() {
+      _currentResponse = msg;
+    });
+    Future.delayed(const Duration(seconds: 10), () {
+      if (mounted && _currentResponse == msg) {
+        setState(() {
+          _currentResponse = null;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -1063,6 +1117,17 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     final bool isGroomingOnCooldown = groomCooldownRemaining > Duration.zero;
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ChatScreen()),
+          );
+        },
+        backgroundColor: Colors.purple,
+        child: const Icon(Icons.chat_bubble_outline),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Row(
@@ -1091,14 +1156,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
             elevation: 4,
             onSelected: (String result) {
               switch (result) {
-                case 'profile':
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ProfileScreen(),
-                    ),
-                  );
-                  break;
                 case 'settings':
                   Navigator.push(
                     context,
@@ -1114,19 +1171,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
             },
             itemBuilder:
                 (BuildContext context) => <PopupMenuEntry<String>>[
-                  PopupMenuItem<String>(
-                    value: 'profile',
-                    child: ListTile(
-                      leading: Icon(Icons.person),
-                      iconColor: Theme.of(context).colorScheme.onSurface,
-                      title: Text(
-                        'Profile',
-                        style: GoogleFonts.fredoka(
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                  ),
                   PopupMenuItem<String>(
                     value: 'settings',
                     child: ListTile(
@@ -1177,32 +1221,145 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                     return Stack(
                       fit: StackFit.expand,
                       children: [
-                        // Pet container - centered
+                        // Decorative gradient blobs (background)
                         Positioned(
-                          top:
-                              constraints.maxHeight *
-                              0.35, // Move pet down a bit
+                          top: -60,
+                          left: -40,
+                          child: Container(
+                            width: constraints.maxWidth * 0.6,
+                            height: constraints.maxWidth * 0.6,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: [
+                                  Colors.purple.withOpacity(0.28),
+                                  Colors.purple.withOpacity(0.05),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: constraints.maxHeight * 0.15,
+                          right: -50,
+                          child: Container(
+                            width: constraints.maxWidth * 0.7,
+                            height: constraints.maxWidth * 0.7,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: [
+                                  Colors.blue.withOpacity(0.22),
+                                  Colors.blue.withOpacity(0.04),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Welcome heading above the pet
+                        Positioned(
+                          top: constraints.maxHeight * 0.16,
                           left: 0,
                           right: 0,
                           child: Center(
-                            child: AnimatedPet(
-                              key: _animatedPetKey,
-                              status: _petStatus,
-                              onPet: _petThePet,
-                              onFeed: _feedThePet,
-                              size: constraints.maxWidth * 0.55,
-                              petData: _petData.isNotEmpty ? _petData : null,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Hi, ${_greetingName()}! 👋',
+                                  style: GoogleFonts.fredoka(
+                                    fontSize: constraints.maxWidth * 0.04,
+                                    fontWeight: FontWeight.w600,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Welcome to UniPaw! 🐾',
+                                  style: GoogleFonts.fredoka(
+                                    fontSize: constraints.maxWidth * 0.05,
+                                    fontWeight: FontWeight.w700,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
 
-                        // Feature buttons - positioned at the top in a row
+                        // Pet container - centered
                         Positioned(
-                          top: constraints.maxHeight * 0.05,
+                          top: constraints.maxHeight * 0.32,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child: BackdropFilter(
+                                filter: ui.ImageFilter.blur(
+                                  sigmaX: 14,
+                                  sigmaY: 14,
+                                ),
+                                child: Container(
+                                  padding: EdgeInsets.all(
+                                    constraints.maxWidth * 0.035,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.22),
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.35),
+                                      width: 1.2,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.purple.withOpacity(0.15),
+                                        blurRadius: 18,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                    ],
+                                  ),
+                                  child: AnimatedPet(
+                                        key: _animatedPetKey,
+                                        status: _petStatus,
+                                        onPet: _petThePet,
+                                        onFeed: _feedThePet,
+                                        size: constraints.maxWidth * 0.50,
+                                        petData:
+                                            _petData.isNotEmpty
+                                                ? _petData
+                                                : null,
+                                      )
+                                      .animate(
+                                        onPlay:
+                                            (controller) => controller.repeat(),
+                                      )
+                                      .moveY(
+                                        begin: 6,
+                                        end: -6,
+                                        duration: 2.seconds,
+                                      )
+                                      .then()
+                                      .moveY(
+                                        begin: -6,
+                                        end: 6,
+                                        duration: 2.seconds,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Feature buttons - repositioned: coins then left-aligned actions under it
+                        Positioned(
+                          top: constraints.maxHeight * 0.02,
                           left: 0,
                           right: 0,
                           child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            padding: EdgeInsets.symmetric(horizontal: 12),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -1254,202 +1411,141 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                     ),
                                   ),
                                 ),
-                                // Top row of feature buttons
+                                // Actions aligned with controls: pair each row (Tasks-Pet, Test-Play, Diary-Feed, Tips-Groom)
                                 Row(
                                   mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    _buildFeatureButton(
-                                      icon: Icons.check_box,
-                                      label: 'Check-In',
-                                      onPressed: () async {
-                                        print(
-                                          "[MyHomePage] Navigating to AttendanceScreen",
-                                        );
-
-                                        // Get initial coin count for comparison
-                                        final initialCoins =
-                                            _totalHappinessCoins;
-
-                                        // Navigate to attendance screen and await result
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (context) => AttendanceScreen(),
-                                          ),
-                                        );
-
-                                        print(
-                                          "[MyHomePage] Returned from AttendanceScreen with result: $result",
-                                        );
-
-                                        // Check if we received a result with earned coins
-                                        if (result != null &&
-                                            result is Map<String, dynamic>) {
-                                          final earnedCoins =
-                                              result['earnedCoins'] as int? ??
-                                              0;
-                                          final totalCoins =
-                                              result['totalCoins'] as int? ??
-                                              _totalHappinessCoins;
-
-                                          if (earnedCoins > 0) {
-                                            print(
-                                              "[MyHomePage] Updating coins directly from result: earned=$earnedCoins, total=$totalCoins",
-                                            );
-
-                                            // Update the coin display immediately
-                                            setState(() {
-                                              _totalHappinessCoins = totalCoins;
-                                            });
-
-                                            // Show confirmation message to user
-                                            ScaffoldMessenger.of(
+                                    // Left actions (stacked)
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildFeatureButton(
+                                          icon:
+                                              Icons.playlist_add_check_rounded,
+                                          label: 'Tasks',
+                                          onPressed: _navigateToTasks,
+                                          color: Colors.cyanAccent,
+                                          size: isSmallScreen ? 28 : 34,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        _buildFeatureButton(
+                                          icon: Icons.science_rounded,
+                                          label: 'Test',
+                                          onPressed: () {
+                                            Navigator.push(
                                               context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  "You earned $earnedCoins coins!",
-                                                ),
-                                                duration: const Duration(
-                                                  seconds: 2,
-                                                ),
-                                                backgroundColor: Colors.green,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (context) =>
+                                                        TestsListScreen(),
                                               ),
                                             );
-                                            return;
-                                          }
-                                        }
-
-                                        // Fallback: refresh coins if no specific result was received
-                                        await _loadHappinessCoins();
-                                      },
-                                      color: Colors.blue,
-                                      size: isSmallScreen ? 40 : 50,
+                                          },
+                                          color: Colors.lightGreen,
+                                          size: isSmallScreen ? 28 : 34,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        _buildFeatureButton(
+                                          icon: Icons.auto_stories_rounded,
+                                          label: 'Diary',
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (context) =>
+                                                        const DiaryScreen(),
+                                              ),
+                                            );
+                                          },
+                                          color: Colors.tealAccent,
+                                          size: isSmallScreen ? 28 : 34,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        _buildFeatureButton(
+                                          icon: Icons.tips_and_updates_rounded,
+                                          label: 'Tips',
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (context) =>
+                                                        DailyTipsScreen(),
+                                              ),
+                                            );
+                                          },
+                                          color: Colors.amber,
+                                          size: isSmallScreen ? 28 : 34,
+                                        ),
+                                      ],
                                     ),
-                                    _buildFeatureButton(
-                                      icon: Icons.help,
-                                      label: 'Help',
-                                      onPressed:
-                                          () => Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (context) =>
-                                                      const HelpSupportScreen(),
-                                            ),
-                                          ),
-                                      color: Colors.red,
-                                      size: isSmallScreen ? 40 : 50,
-                                    ),
-                                    _buildFeatureButton(
-                                      icon: Icons.checklist_rtl,
-                                      label: 'Tasks',
-                                      onPressed: _navigateToTasks,
-                                      color: Colors.cyan,
-                                      size: isSmallScreen ? 40 : 50,
-                                    ),
-                                    _buildFeatureButton(
-                                      icon: Icons.science,
-                                      label: 'Test',
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (context) => TestsListScreen(),
-                                          ),
-                                        );
-                                      },
-                                      color: Colors.green,
-                                      size: isSmallScreen ? 40 : 50,
-                                    ),
-                                    _buildFeatureButton(
-                                      icon: Icons.book,
-                                      label: 'Diary',
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (context) =>
-                                                    const DiaryScreen(),
-                                          ),
-                                        );
-                                      },
-                                      color: Colors.teal,
-                                      size: isSmallScreen ? 40 : 50,
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: constraints.maxHeight * 0.02),
-                                // Bottom row with updated buttons
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    _buildFeatureButton(
-                                      icon: Icons.pets,
-                                      label: 'Pet',
-                                      onPressed:
-                                          isPettingOnCooldown
-                                              ? null
-                                              : _petThePet,
-                                      color: Colors.purple,
-                                      size: isSmallScreen ? 40 : 50,
-                                      disabled: isPettingOnCooldown,
-                                      cooldownRemaining:
-                                          petCooldownRemaining, // Pass remaining time
-                                    ),
-                                    SizedBox(
-                                      width: constraints.maxWidth * 0.05,
-                                    ),
-                                    _buildFeatureButton(
-                                      icon: Icons.sports_esports,
-                                      label: 'Play',
-                                      onPressed:
-                                          (isPlayingOnCooldown ||
-                                                  _petData.isEmpty)
-                                              ? null
-                                              : _playWithPet,
-                                      color: Colors.blue,
-                                      size: isSmallScreen ? 40 : 50,
-                                      disabled: isPlayingOnCooldown,
-                                      cooldownRemaining:
-                                          playCooldownRemaining, // Pass remaining time
-                                    ),
-                                    SizedBox(
-                                      width: constraints.maxWidth * 0.05,
-                                    ),
-                                    _buildFeatureButton(
-                                      icon: Icons.restaurant,
-                                      label: 'Feed',
-                                      onPressed:
-                                          isFeedingOnCooldown
-                                              ? null
-                                              : _feedThePet,
-                                      color: Colors.orange,
-                                      size: isSmallScreen ? 40 : 50,
-                                      disabled: isFeedingOnCooldown,
-                                      cooldownRemaining:
-                                          feedCooldownRemaining, // Pass remaining time
-                                    ),
-                                    SizedBox(
-                                      width: constraints.maxWidth * 0.05,
-                                    ),
-                                    _buildFeatureButton(
-                                      icon: Icons.cleaning_services,
-                                      label: 'Groom',
-                                      onPressed:
-                                          (isGroomingOnCooldown ||
-                                                  _petData.isEmpty)
-                                              ? null
-                                              : _groomPet,
-                                      color: Colors.green,
-                                      size: isSmallScreen ? 40 : 50,
-                                      disabled: isGroomingOnCooldown,
-                                      cooldownRemaining:
-                                          groomCooldownRemaining, // Pass remaining time
+                                    // Right controls (stacked)
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        _buildFeatureButton(
+                                          icon: Icons.pets,
+                                          label: 'Pet',
+                                          onPressed:
+                                              isPettingOnCooldown
+                                                  ? null
+                                                  : _petThePet,
+                                          color: Colors.purple,
+                                          size: isSmallScreen ? 28 : 34,
+                                          disabled: isPettingOnCooldown,
+                                          cooldownRemaining:
+                                              petCooldownRemaining,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        _buildFeatureButton(
+                                          icon: Icons.sports_esports,
+                                          label: 'Play',
+                                          onPressed:
+                                              (isPlayingOnCooldown ||
+                                                      _petData.isEmpty)
+                                                  ? null
+                                                  : _playWithPet,
+                                          color: Colors.blue,
+                                          size: isSmallScreen ? 28 : 34,
+                                          disabled: isPlayingOnCooldown,
+                                          cooldownRemaining:
+                                              playCooldownRemaining,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        _buildFeatureButton(
+                                          icon: Icons.restaurant,
+                                          label: 'Feed',
+                                          onPressed:
+                                              isFeedingOnCooldown
+                                                  ? null
+                                                  : _feedThePet,
+                                          color: Colors.orange,
+                                          size: isSmallScreen ? 28 : 34,
+                                          disabled: isFeedingOnCooldown,
+                                          cooldownRemaining:
+                                              feedCooldownRemaining,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        _buildFeatureButton(
+                                          icon: Icons.cleaning_services,
+                                          label: 'Groom',
+                                          onPressed:
+                                              (isGroomingOnCooldown ||
+                                                      _petData.isEmpty)
+                                                  ? null
+                                                  : _groomPet,
+                                          color: Colors.green,
+                                          size: isSmallScreen ? 28 : 34,
+                                          disabled: isGroomingOnCooldown,
+                                          cooldownRemaining:
+                                              groomCooldownRemaining,
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -1535,11 +1631,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                             ),
                           ),
 
-                        // Pet stats and activities section
+                        // Controls column no longer used — replaced by paired rows above
+
+                        // Pet stats and activities section (moved slightly downward)
                         Positioned(
                           bottom:
                               constraints.maxHeight *
-                              0.12, // Position it above status bar
+                              0.06, // Move further down toward bottom
                           left: 0,
                           right: 0,
                           child: Container(
@@ -1551,7 +1649,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                 // Pet mood and activities
                                 Container(
                                   padding: EdgeInsets.all(
-                                    constraints.maxWidth * 0.03,
+                                    constraints.maxWidth * 0.022,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.7),
@@ -1639,7 +1737,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                               Icons.favorite,
                                               color:
                                                   _getStatusTextColor(), // Use mood color
-                                              size: constraints.maxWidth * 0.05,
+                                              size: constraints.maxWidth * 0.04,
                                             ),
                                             SizedBox(
                                               width:
@@ -1650,8 +1748,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                               'Happiness: ${_petData['happiness'] ?? '--'}%',
                                               style: GoogleFonts.fredoka(
                                                 fontSize:
-                                                    constraints.maxWidth *
-                                                    0.035,
+                                                    constraints.maxWidth * 0.03,
                                                 // Use mood color for text too
                                                 color: _getStatusTextColor()
                                                     .withOpacity(0.9),
@@ -1732,168 +1829,76 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                 .slideX(begin: 0.5, end: 0, duration: 300.ms),
                           ),
 
-                        // --- MOVED Tips and History Buttons ---
-                        Positioned(
-                          // Adjust top to vertically align with the pet's center
-                          top:
-                              constraints.maxHeight * 0.35 +
-                              (constraints.maxWidth *
-                                  0.55 /
-                                  4), // Centering attempt
-                          left: 0,
-                          right: 0,
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: constraints.maxWidth * 0.08,
-                            ), // Padding from screen edges
-                            child: Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment
-                                      .spaceBetween, // Space them out
-                              children: [
-                                // Tips Button - Updated
-                                _buildFeatureButton(
-                                  icon: Icons.lightbulb_outline,
-                                  label: 'Tips',
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => DailyTipsScreen(),
-                                      ),
-                                    );
-                                  },
-                                  color: Colors.orange,
-                                  size:
-                                      40, // Use a fixed size or adjust as needed
-                                  // disabled: false, // Default
-                                  // cooldownRemaining: null, // Default
-                                ),
-                                // History Button - Updated
-                                _buildFeatureButton(
-                                  icon: Icons.history,
-                                  label: 'History',
-                                  onPressed: () {
-                                    if (_userId.isNotEmpty) {
-                                      // Only navigate if user ID is available
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (context) => ChatHistoryScreen(
-                                                userId: _userId,
-                                              ),
-                                        ),
-                                      );
-                                    } else {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Cannot view history. User not logged in.',
-                                          ),
-                                          backgroundColor: Colors.orange,
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  color: Colors.blueGrey,
-                                  size:
-                                      40, // Use a fixed size or adjust as needed
-                                  // disabled: false, // Default
-                                  // cooldownRemaining: null, // Default
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        // --- END MOVED Buttons ---
+                        // Tips/History buttons section removed (Tips moved under coins)
                       ],
                     );
                   },
                 ),
               ),
 
-              // Chat input
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: screenSize.width * 0.03,
-                  vertical: screenSize.height * 0.015,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, -2),
+              // Chat input removed; chat is now a separate screen
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8,
+        color: Colors.white,
+        elevation: 8,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                tooltip: 'Calendar',
+                icon: const Icon(Icons.calendar_month),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AttendanceScreen(),
                     ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _chatController,
-                        decoration: InputDecoration(
-                          hintText: 'Talk to your pet...',
-                          hintStyle: GoogleFonts.fredoka(
-                            // Use Fredoka font for hint
-                            color: Colors.grey.shade600,
-                            fontSize: 16, // Adjusted fixed size
-                          ),
-                          filled: true,
-                          fillColor: Colors.white, // Cleaner background
-                          // Remove the generic border
-                          // border: OutlineInputBorder(...)
-                          enabledBorder: OutlineInputBorder(
-                            // Border when not focused
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(
-                              color: Colors.grey.shade300,
-                              width: 1.0,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            // Border when focused
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary,
-                              width: 1.5,
-                            ),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            // Fixed padding
-                            horizontal: 20,
-                            vertical: 15,
-                          ),
-                        ),
-                        style: GoogleFonts.fredoka(
-                          fontSize: 16,
-                        ), // Use Fredoka font for input
-                        onSubmitted: (_) => _sendMessage(),
-                      ),
+                  );
+                },
+              ),
+              IconButton(
+                tooltip: 'Budget',
+                icon: const Icon(Icons.receipt_long),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const BudgetListScreen(),
                     ),
-                    SizedBox(width: screenSize.width * 0.02),
-                    Material(
-                      color: Colors.purple,
-                      borderRadius: BorderRadius.circular(30),
-                      child: InkWell(
-                        onTap: _sendMessage,
-                        borderRadius: BorderRadius.circular(30),
-                        child: Container(
-                          padding: EdgeInsets.all(screenSize.width * 0.035),
-                          child: Icon(
-                            Icons.send,
-                            color: Colors.white,
-                            size: screenSize.width * 0.05,
-                          ),
-                        ),
-                      ),
+                  );
+                },
+              ),
+              const SizedBox(width: 48),
+              IconButton(
+                tooltip: 'Support',
+                icon: const Icon(Icons.support_agent),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HelpSupportScreen(),
                     ),
-                  ],
-                ),
+                  );
+                },
+              ),
+              IconButton(
+                tooltip: 'Profile',
+                icon: const Icon(Icons.person_outline),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProfileScreen(),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -2492,7 +2497,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     }
   }
 
-  // New method to load chat history for the current day
+  // load chat history for the current day
   Future<void> _loadTodaysChatHistory() async {
     if (_userId.isEmpty) return; // Don't load if no user
     print("[_loadTodaysChatHistory] Loading chat history for today...");
