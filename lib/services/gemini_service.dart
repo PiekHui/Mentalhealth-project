@@ -1,6 +1,6 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:logging/logging.dart';
-import '../config/env.dart';
+import '../config/env.sample.dart';
 
 class GeminiService {
   final Logger _logger = Logger('GeminiService');

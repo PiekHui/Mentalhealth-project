@@ -28,6 +28,16 @@ set(CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS_RELEASE}")
 set(CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
 set(CMAKE_C_FLAGS_PROFILE "${CMAKE_C_FLAGS_RELEASE}")
 set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
+# Add MSVC runtime library
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# Link against required Windows libraries
+target_link_libraries(${BINARY_NAME} PRIVATE
+    # ...existing libraries...
+    "msvcrt.lib"
+    "ucrt.lib"
+    "vcruntime.lib"
+)
 
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)

@@ -15,7 +15,7 @@ class HelpSupportScreen extends StatefulWidget {
 
 class _HelpSupportScreenState extends State<HelpSupportScreen> {
   // Replace with your actual Google API key
-  static const String _googleApiKey = 'AIzaSyDo4nP04agGNTjiSkNuf8rjETujxOGVICI';
+  static const String _googleApiKey = 'AIzaSyDik_l8t2EFCwMohoNSbVX2CJa3qN1UEFE';
 
   late GoogleMapController _mapController;
   Position? currentPosition;

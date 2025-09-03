@@ -55,7 +55,7 @@ class HelpDataService {
   Future<List<Map<String, String>>> getCounselingCenters() async {
     try {
       print("Trying to fetch counseling centers from Firestore");
-      final snapshot = await _firestore.collection('counseling_centers').get();
+      final snapshot = await _firestore.collection('couseling_centers').get();
       print(
         "Counseling centers snapshot: ${snapshot.docs.length} documents found",
       );
@@ -138,7 +138,7 @@ class HelpDataService {
     String description,
     String email,
   ) async {
-    await _firestore.collection('counseling_centers').add({
+    await _firestore.collection('couseling_centers').add({
       'name': name,
       'address': address,
       'phone': phone,

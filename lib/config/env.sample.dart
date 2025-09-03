@@ -1,3 +1,3 @@
 class Env {
-  static const String geminiApiKey = 'YOUR_API_KEY';
+  static const String geminiApiKey = 'AIzaSyA2aXI1NIRYbm0QxTNi49 - sretoexBKT8Y';
 }
