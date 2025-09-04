@@ -1465,20 +1465,21 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                           size: isSmallScreen ? 28 : 34,
                                         ),
                                         const SizedBox(height: 8),
+                                        // --- Replace Tips with Help & Support ---
                                         _buildFeatureButton(
-                                          icon: Icons.tips_and_updates_rounded,
-                                          label: 'Tips',
+                                          icon: Icons.support_agent,
+                                          label: 'Help',
                                           onPressed: () {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
                                                 builder:
                                                     (context) =>
-                                                        DailyTipsScreen(),
+                                                        const HelpSupportScreen(),
                                               ),
                                             );
                                           },
-                                          color: Colors.amber,
+                                          color: Colors.deepPurpleAccent,
                                           size: isSmallScreen ? 28 : 34,
                                         ),
                                       ],
@@ -1876,15 +1877,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 },
               ),
               const SizedBox(width: 48),
+              // --- Replace Help & Support with Peer Support ---
               IconButton(
-                tooltip: 'Support',
-                icon: const Icon(Icons.support_agent),
+                tooltip: 'Peer Support',
+                icon: const Icon(Icons.group),
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const HelpSupportScreen(),
-                    ),
+                  // TODO: Replace with your Peer Support screen navigation
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Peer Support coming soon!')),
                   );
                 },
               ),
