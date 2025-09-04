@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
-import '../config/env.dart';
+import '../config/env.sample.dart';
 
 class OpenRouterService {
   final Logger _logger = Logger('OpenRouterService');

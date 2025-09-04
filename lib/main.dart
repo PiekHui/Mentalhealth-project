@@ -9,7 +9,7 @@ import 'screens/attendance_screen.dart';
 import 'dart:math';
 import 'services/gemini_service.dart';
 import 'services/openrouter_service.dart';
-import 'config/env.dart';
+import 'config/env.sample.dart';
 import 'package:logging/logging.dart';
 import 'screens/daily_tips_screen.dart';
 import 'dart:async';
