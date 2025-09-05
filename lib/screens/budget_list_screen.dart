@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:helloworld/services/budget_list_service.dart';
 import 'package:month_picker_dialog/month_picker_dialog.dart';
@@ -11,12 +10,14 @@ class BudgetItem {
   final String category;
   final double amount;
   final DateTime date;
+  final bool isIncome;
 
   BudgetItem({
     this.id, // Add id parameter
     required this.category,
     required this.amount,
     required this.date,
+    this.isIncome = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -24,6 +25,7 @@ class BudgetItem {
     'category': category,
     'amount': amount,
     'date': date.toIso8601String(),
+    'isIncome': isIncome,
   };
 
   // Update fromJson to include id
@@ -32,6 +34,7 @@ class BudgetItem {
     category: json['category'],
     amount: json['amount'].toDouble(),
     date: DateTime.parse(json['date']),
+    isIncome: json['isIncome'] == true,
   );
 }
 
@@ -45,6 +48,7 @@ class BudgetListScreen extends StatefulWidget {
 class _BudgetListScreenState extends State<BudgetListScreen> {
   final BudgetListService _budgetService = BudgetListService();
   final List<BudgetItem> _expenses = [];
+  final List<BudgetItem> _incomes = [];
   double _monthlyBudget = 0;
 
   // Add new state variables
@@ -62,11 +66,14 @@ class _BudgetListScreenState extends State<BudgetListScreen> {
     'Education',
   ];
 
+  final List<String> _incomeCategories = ['Salary', 'Part-time', 'Investment'];
+
   @override
   void initState() {
     super.initState();
     _loadBudget();
     _loadExpenses();
+    _loadIncomes();
   }
 
   // Add month selection method
@@ -87,6 +94,7 @@ class _BudgetListScreenState extends State<BudgetListScreen> {
       });
       _loadBudget();
       _loadExpenses();
+      _loadIncomes();
     }
   }
 
@@ -145,70 +153,7 @@ class _BudgetListScreenState extends State<BudgetListScreen> {
     );
   }
 
-  Future<void> _addExpense() async {
-    String selectedCategory = _categories[0];
-    final amountController = TextEditingController();
-
-    await showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text('Add Expense', style: GoogleFonts.fredoka()),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: amountController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: 'Amount (RM)',
-                    labelStyle: GoogleFonts.fredoka(),
-                  ),
-                ),
-                DropdownButtonFormField<String>(
-                  value: selectedCategory,
-                  items:
-                      _categories
-                          .map(
-                            (category) => DropdownMenuItem(
-                              value: category,
-                              child: Text(
-                                category,
-                                style: GoogleFonts.fredoka(),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                  onChanged: (value) => selectedCategory = value!,
-                  decoration: InputDecoration(
-                    labelText: 'Category',
-                    labelStyle: GoogleFonts.fredoka(),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Cancel', style: GoogleFonts.fredoka()),
-              ),
-              TextButton(
-                onPressed: () {
-                  final amount = double.tryParse(amountController.text) ?? 0;
-                  final expense = BudgetItem(
-                    category: selectedCategory,
-                    amount: amount,
-                    date: DateTime.now(),
-                  );
-                  _saveExpense(expense);
-                  Navigator.pop(context);
-                },
-                child: Text('Save', style: GoogleFonts.fredoka()),
-              ),
-            ],
-          ),
-    );
-  }
+  // Removed old _addExpense - unified into _addTransaction
 
   Future<void> _saveExpense(BudgetItem expense) async {
     try {
@@ -239,27 +184,65 @@ class _BudgetListScreenState extends State<BudgetListScreen> {
     }
   }
 
-  Future<void> _checkAndResetBudget() async {
-    try {
-      final now = DateTime.now();
-      final prefs = await SharedPreferences.getInstance();
-      final lastReset = DateTime.parse(
-        prefs.getString('lastBudgetReset') ?? now.toIso8601String(),
-      );
+  // Removed old _addIncome - unified into _addTransaction
 
-      // Check if we're in a new month
-      if (lastReset.month != now.month || lastReset.year != now.year) {
-        await _budgetService.archiveOldExpenses(now);
-        await prefs.setString('lastBudgetReset', now.toIso8601String());
-        await _loadExpenses();
-      }
+  Future<void> _saveIncome(BudgetItem income) async {
+    try {
+      await _budgetService.saveIncome(income.toJson());
+      await _loadIncomes();
     } catch (e) {
-      print('Error checking/resetting budget: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save income: $e')));
     }
   }
 
+  Future<void> _loadIncomes() async {
+    try {
+      final incomeData = await _budgetService.loadIncomesForMonth(
+        _selectedMonth,
+      );
+      setState(() {
+        _incomes.clear();
+        _incomes.addAll(
+          incomeData.map((data) {
+            final item = BudgetItem.fromJson(data);
+            return BudgetItem(
+              id: item.id,
+              category: item.category,
+              amount: item.amount,
+              date: item.date,
+              isIncome: true,
+            );
+          }).toList(),
+        );
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to load incomes: $e')));
+    }
+  }
+
+  // Removed unused _checkAndResetBudget
+
   double get _totalExpenses =>
       _expenses.fold(0, (sum, expense) => sum + expense.amount);
+
+  double get _totalIncomes =>
+      _incomes.fold(0, (sum, income) => sum + income.amount);
+
+  List<List<BudgetItem>> _groupTransactionsByDay() {
+    final List<BudgetItem> all = [..._expenses, ..._incomes];
+    final Map<String, List<BudgetItem>> groups = {};
+    for (var tx in all) {
+      final key = DateFormat('yyyy-MM-dd').format(tx.date);
+      groups.putIfAbsent(key, () => []);
+      groups[key]!.add(tx);
+    }
+    final sortedKeys = groups.keys.toList()..sort((a, b) => b.compareTo(a));
+    return sortedKeys.map((k) => groups[k]!).toList();
+  }
 
   // Update the icon selection in the ListView.builder
   Widget _getCategoryIcon(String category) {
@@ -268,6 +251,21 @@ class _BudgetListScreenState extends State<BudgetListScreen> {
     Color backgroundColor;
 
     switch (category) {
+      case 'Salary':
+        icon = Icons.payments;
+        iconColor = Colors.teal;
+        backgroundColor = Colors.teal.shade50;
+        break;
+      case 'Part-time':
+        icon = Icons.work_history;
+        iconColor = Colors.cyan;
+        backgroundColor = Colors.cyan.shade50;
+        break;
+      case 'Investment':
+        icon = Icons.trending_up;
+        iconColor = Colors.lightGreen;
+        backgroundColor = Colors.lightGreen.shade50;
+        break;
       case 'Food':
         icon = Icons.fastfood;
         iconColor = Colors.orange;
@@ -317,24 +315,7 @@ class _BudgetListScreenState extends State<BudgetListScreen> {
     );
   }
 
-  List<List<BudgetItem>> _groupExpensesByDay() {
-    // Group expenses by day
-    final Map<String, List<BudgetItem>> groups = {};
-
-    for (var expense in _expenses) {
-      final dateKey = DateFormat('yyyy-MM-dd').format(expense.date);
-      if (!groups.containsKey(dateKey)) {
-        groups[dateKey] = [];
-      }
-      groups[dateKey]!.add(expense);
-    }
-
-    // Sort by date
-    final sortedKeys =
-        groups.keys.toList()..sort((a, b) => b.compareTo(a)); // Latest first
-
-    return sortedKeys.map((key) => groups[key]!).toList();
-  }
+  // Removed unused _groupExpensesByDay (replaced by _groupTransactionsByDay)
 
   // Update the chart section in _buildChartView method
   Widget _buildChartView() {
@@ -453,6 +434,12 @@ class _BudgetListScreenState extends State<BudgetListScreen> {
   // Add this helper method for chart colors
   Color _getCategoryColor(String category) {
     switch (category) {
+      case 'Salary':
+        return Colors.teal.shade300;
+      case 'Part-time':
+        return Colors.cyan.shade300;
+      case 'Investment':
+        return Colors.lightGreen.shade300;
       case 'Food':
         return Colors.orange.shade300;
       case 'Drinks':
@@ -518,11 +505,12 @@ class _BudgetListScreenState extends State<BudgetListScreen> {
                       vertical: 2, // Reduced from 14
                     ),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.blue.shade100, Colors.blue.shade50],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: const Color.fromARGB(255, 216, 216, 248),
+                      // gradient: LinearGradient(
+                      //   colors: [const Color.fromARGB(255, 187, 195, 251), const Color.fromARGB(255, 228, 227, 253)],
+                      //   begin: Alignment.topLeft,
+                      //   end: Alignment.bottomRight,
+                      // ),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
@@ -540,7 +528,10 @@ class _BudgetListScreenState extends State<BudgetListScreen> {
                           children: [
                             Text(
                               'Monthly Budget: RM${_monthlyBudget.toStringAsFixed(2)}',
-                              style: GoogleFonts.fredoka(fontSize: 18),
+                              style: GoogleFonts.fredoka(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                             IconButton(
                               icon: const Icon(Icons.edit, size: 20),
@@ -562,25 +553,37 @@ class _BudgetListScreenState extends State<BudgetListScreen> {
                                 : Colors.green,
                           ),
                         ),
-                        Text(
-                          'Expense: RM${_totalExpenses.toStringAsFixed(2)}',
-                          style: GoogleFonts.fredoka(
-                            fontSize: 16,
-                            color:
-                                _totalExpenses > _monthlyBudget
-                                    ? Colors.red
-                                    : Colors.green,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Expense: RM${_totalExpenses.toStringAsFixed(2)}',
+                              style: GoogleFonts.fredoka(
+                                fontSize: 16,
+                                color:
+                                    _totalExpenses > _monthlyBudget
+                                        ? Colors.red
+                                        : Colors.green,
+                              ),
+                            ),
+                            Text(
+                              'Income: RM${_totalIncomes.toStringAsFixed(2)}',
+                              style: GoogleFonts.fredoka(
+                                fontSize: 16,
+                                color: Colors.blueGrey,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
                   Expanded(
                     child:
-                        _expenses.isEmpty
+                        _expenses.isEmpty && _incomes.isEmpty
                             ? Center(
                               child: Text(
-                                'No expenses recorded yet.\nTap + to add one.',
+                                'No records yet.\nTap + to add one.',
                                 style: GoogleFonts.fredoka(
                                   fontSize: 18,
                                   color: Colors.grey.shade700,
@@ -597,15 +600,17 @@ class _BudgetListScreenState extends State<BudgetListScreen> {
                               physics: const AlwaysScrollableScrollPhysics(),
                               shrinkWrap:
                                   true, // Add this to make the list take minimum space
-                              itemCount: _groupExpensesByDay().length,
+                              itemCount: _groupTransactionsByDay().length,
                               itemBuilder: (context, index) {
-                                final dayExpenses =
-                                    _groupExpensesByDay()[index];
-                                final date = dayExpenses.first.date;
-                                final totalForDay = dayExpenses.fold<double>(
-                                  0,
-                                  (sum, expense) => sum + expense.amount,
-                                );
+                                final dayItems =
+                                    _groupTransactionsByDay()[index];
+                                final date = dayItems.first.date;
+                                final dayIncome = dayItems
+                                    .where((e) => e.isIncome)
+                                    .fold(0.0, (s, e) => s + e.amount);
+                                final dayExpense = dayItems
+                                    .where((e) => !e.isIncome)
+                                    .fold(0.0, (s, e) => s + e.amount);
 
                                 return Card(
                                   margin: const EdgeInsets.symmetric(
@@ -618,12 +623,23 @@ class _BudgetListScreenState extends State<BudgetListScreen> {
                                     // Added rounded corners
                                     borderRadius: BorderRadius.circular(12),
                                   ),
+                                  color: const Color.fromARGB(
+                                    255,
+                                    237,
+                                    247,
+                                    255,
+                                  ),
                                   child: Column(
                                     children: [
                                       Container(
                                         padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
-                                          color: Colors.blue.shade100,
+                                          color: const Color.fromARGB(
+                                            255,
+                                            200,
+                                            229,
+                                            253,
+                                          ),
                                           borderRadius:
                                               const BorderRadius.vertical(
                                                 top: Radius.circular(4),
@@ -643,31 +659,51 @@ class _BudgetListScreenState extends State<BudgetListScreen> {
                                               ),
                                             ),
                                             Text(
-                                              'Expense: RM${totalForDay.toStringAsFixed(2)}',
+                                              'Income: RM${dayIncome.toStringAsFixed(2)}  •  Expense: RM${dayExpense.toStringAsFixed(2)}',
                                               style: GoogleFonts.fredoka(
-                                                fontSize: 14,
+                                                fontSize: 12,
                                                 color: Colors.blue.shade700,
                                               ),
                                             ),
                                           ],
                                         ),
                                       ),
-                                      ...dayExpenses.map(
-                                        (expense) => ListTile(
+                                      ...dayItems.map(
+                                        (item) => ListTile(
                                           leading: _getCategoryIcon(
-                                            expense.category,
+                                            item.category,
                                           ),
                                           title: Text(
-                                            expense.category,
+                                            item.category,
                                             style: GoogleFonts.fredoka(),
                                           ),
-                                          trailing: Text(
-                                            '-RM${expense.amount.toStringAsFixed(2)}',
-                                            style: GoogleFonts.fredoka(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.red,
-                                            ),
+                                          trailing: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                '${item.isIncome ? '+' : '-'}RM${item.amount.toStringAsFixed(2)}',
+                                                style: GoogleFonts.fredoka(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                  color:
+                                                      item.isIncome
+                                                          ? Colors.green
+                                                          : Colors.red,
+                                                ),
+                                              ),
+                                              // const SizedBox(width: 2),
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.delete_outline,
+                                                  size: 20,
+                                                ),
+                                                color: Colors.grey.shade700,
+                                                onPressed:
+                                                    () => _deleteTransaction(
+                                                      item,
+                                                    ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ),
@@ -689,7 +725,7 @@ class _BudgetListScreenState extends State<BudgetListScreen> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.list), label: 'List'),
-          BottomNavigationBarItem(icon: Icon(Icons.pie_chart), label: 'Charts'),
+          BottomNavigationBarItem(icon: Icon(Icons.pie_chart), label: 'Chart'),
         ],
       ),
       floatingActionButton:
@@ -697,11 +733,193 @@ class _BudgetListScreenState extends State<BudgetListScreen> {
               ? Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: FloatingActionButton(
-                  onPressed: _addExpense,
+                  onPressed: _addTransaction,
                   child: const Icon(Icons.add),
                 ),
               )
               : null,
     );
+  }
+}
+
+extension _AddTransaction on _BudgetListScreenState {
+  Future<void> _addTransaction() async {
+    bool addingIncome = false;
+    String selectedCategory =
+        addingIncome ? _incomeCategories.first : _categories.first;
+    final amountController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setLocalState) => AlertDialog(
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        addingIncome ? 'Add Income' : 'Add Expense',
+                        style: GoogleFonts.fredoka(),
+                      ),
+                      Switch(
+                        value: addingIncome,
+                        onChanged: (v) {
+                          setLocalState(() {
+                            addingIncome = v;
+                            selectedCategory =
+                                addingIncome
+                                    ? _incomeCategories.first
+                                    : _categories.first;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: amountController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Amount (RM)',
+                          labelStyle: GoogleFonts.fredoka(),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: selectedCategory,
+                        items:
+                            (addingIncome ? _incomeCategories : _categories)
+                                .map(
+                                  (c) => DropdownMenuItem(
+                                    value: c,
+                                    child: Text(
+                                      c,
+                                      style: GoogleFonts.fredoka(),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged:
+                            (value) =>
+                                setLocalState(() => selectedCategory = value!),
+                        decoration: InputDecoration(
+                          labelText: 'Category',
+                          labelStyle: GoogleFonts.fredoka(),
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Cancel', style: GoogleFonts.fredoka()),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        final amount =
+                            double.tryParse(amountController.text) ?? 0;
+                        if (addingIncome) {
+                          final item = BudgetItem(
+                            category: selectedCategory,
+                            amount: amount,
+                            date: DateTime.now(),
+                            isIncome: true,
+                          );
+                          await _saveIncome(item);
+                        } else {
+                          final item = BudgetItem(
+                            category: selectedCategory,
+                            amount: amount,
+                            date: DateTime.now(),
+                            isIncome: false,
+                          );
+                          await _saveExpense(item);
+                        }
+                        if (context.mounted) Navigator.pop(context);
+                      },
+                      child: Text('Save', style: GoogleFonts.fredoka()),
+                    ),
+                  ],
+                ),
+          ),
+    );
+  }
+
+  Future<void> _deleteTransaction(BudgetItem item) async {
+    try {
+      if (item.isIncome) {
+        // find by matching fields; for robust deletes store and use doc ids
+        final matches =
+            _incomes
+                .where(
+                  (e) =>
+                      e.date == item.date &&
+                      e.amount == item.amount &&
+                      e.category == item.category,
+                )
+                .toList();
+        if (matches.isNotEmpty && matches.first.id != null) {
+          await _budgetService.deleteIncome(matches.first.id!);
+        } else {
+          // fallback: reload incomes to capture ids and try matching again
+          await _loadIncomes();
+          final refreshed =
+              _incomes
+                  .where(
+                    (e) =>
+                        e.date == item.date &&
+                        e.amount == item.amount &&
+                        e.category == item.category,
+                  )
+                  .toList();
+          if (refreshed.isNotEmpty && refreshed.first.id != null) {
+            await _budgetService.deleteIncome(refreshed.first.id!);
+          }
+        }
+        await _loadIncomes();
+      } else {
+        final matches =
+            _expenses
+                .where(
+                  (e) =>
+                      e.date == item.date &&
+                      e.amount == item.amount &&
+                      e.category == item.category,
+                )
+                .toList();
+        if (matches.isNotEmpty && matches.first.id != null) {
+          await _budgetService.deleteExpense(matches.first.id!);
+        } else {
+          await _loadExpenses();
+          final refreshed =
+              _expenses
+                  .where(
+                    (e) =>
+                        e.date == item.date &&
+                        e.amount == item.amount &&
+                        e.category == item.category,
+                  )
+                  .toList();
+          if (refreshed.isNotEmpty && refreshed.first.id != null) {
+            await _budgetService.deleteExpense(refreshed.first.id!);
+          }
+        }
+        await _loadExpenses();
+      }
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Deleted successfully')));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+      }
+    }
   }
 }
