@@ -8,7 +8,7 @@ import 'conversation_detail_screen.dart';
 import '../main.dart'; // For ChatMessage
 import '../services/gemini_service.dart';
 import '../services/openrouter_service.dart';
-import '../config/env.dart';
+import '../config/env.sample.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
