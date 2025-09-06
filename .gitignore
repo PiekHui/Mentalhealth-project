@@ -44,3 +44,23 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Flutter build files
+build/
+android/app/build/
+*.apk
+*.aab
+
+# Generated assets
+android/app/build/intermediates/
+android/app/build/outputs/
+
+# Dart & Flutter
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+
+# IDE files
+.idea/
+.vscode/
