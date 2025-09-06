@@ -34,6 +34,8 @@ import 'screens/profile_screen.dart';
 import 'screens/settings_screen.dart';
 // --- End Import new screens ---
 
+import 'screens/consultation_screen.dart';
+
 // --- Added PetTask class ---
 // Define a Task class for better structure (copied from pet_tasks_screen.dart)
 class PetTask {
@@ -1879,12 +1881,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               const SizedBox(width: 48),
               // --- Replace Help & Support with Peer Support ---
               IconButton(
-                tooltip: 'Peer Support',
+                tooltip: 'Consultation',
                 icon: const Icon(Icons.group),
                 onPressed: () {
-                  // TODO: Replace with your Peer Support screen navigation
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Peer Support coming soon!')),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ConsultationScreen(),
+                    ),
                   );
                 },
               ),
