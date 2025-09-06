@@ -394,7 +394,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   Timer? _tipTimer;
   final Random _random = Random();
 
-  List<Map<String, String>> _unusedTips = [];
+  final List<Map<String, String>> _unusedTips = [];
 
   final List<String> _companionshipPrompts = [
     "How was your day? I'd love to hear about it!",
@@ -1530,6 +1530,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                           onPressed: () {
                                             _animatedPetKey.currentState
                                                 ?.triggerPet();
+                                            _petThePet();
                                           },
 
                                           // isPettingOnCooldown
@@ -1548,6 +1549,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                           onPressed: () {
                                             _animatedPetKey.currentState
                                                 ?.triggerPlay();
+                                            _playWithPet();
                                           },
                                           // (isPlayingOnCooldown ||
                                           //         _petData.isEmpty)
@@ -1561,11 +1563,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                         ),
                                         const SizedBox(height: 8),
                                         _buildFeatureButton(
-                                          icon: Icons.restaurant,
-                                          label: 'Feed',
+                                          icon: Icons.sports_soccer,
+                                          label: 'Sport',
                                           onPressed: () {
                                             _animatedPetKey.currentState
                                                 ?.triggerFeed();
+                                            _feedThePet();
                                           },
                                           // isFeedingOnCooldown
                                           //     ? null
@@ -1583,6 +1586,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                           onPressed: () {
                                             _animatedPetKey.currentState
                                                 ?.triggerGroom();
+                                            _groomPet();
                                           },
                                           // (isGroomingOnCooldown ||
                                           //         _petData.isEmpty)

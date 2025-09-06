@@ -92,21 +92,25 @@ class PetModel {
       if (data['happiness'] == null) updates['happiness'] = 80;
       if (data['mood'] == null) updates['mood'] = 'Content';
       if (data['petsToday'] == null) updates['petsToday'] = 0;
-      if (data['lastPetDate'] == null)
+      if (data['lastPetDate'] == null) {
         updates['lastPetDate'] = FieldValue.serverTimestamp();
+      }
       if (data['mealsToday'] == null) updates['mealsToday'] = 0;
-      if (data['lastFeedDate'] == null)
+      if (data['lastFeedDate'] == null) {
         updates['lastFeedDate'] = FieldValue.serverTimestamp();
+      }
       if (data['dailyTaskStatus'] == null) updates['dailyTaskStatus'] = {};
       if (data['lastTaskStatusResetDate'] == null) {
         updates['lastTaskStatusResetDate'] = FieldValue.serverTimestamp();
       }
       if (data['playsToday'] == null) updates['playsToday'] = 0;
-      if (data['lastPlayDate'] == null)
+      if (data['lastPlayDate'] == null) {
         updates['lastPlayDate'] = FieldValue.serverTimestamp();
+      }
       if (data['groomsToday'] == null) updates['groomsToday'] = 0;
-      if (data['lastGroomDate'] == null)
+      if (data['lastGroomDate'] == null) {
         updates['lastGroomDate'] = FieldValue.serverTimestamp();
+      }
 
       // --- ADDED: Ensure new task counters exist ---
       if (data['chatsToday'] == null) updates['chatsToday'] = 0;
@@ -117,14 +121,17 @@ class PetModel {
 
       // Remove obsolete fields
       if (data.containsKey('energy')) updates['energy'] = FieldValue.delete();
-      if (data.containsKey('maxEnergy'))
+      if (data.containsKey('maxEnergy')) {
         updates['maxEnergy'] = FieldValue.delete();
+      }
       if (data.containsKey('hunger')) updates['hunger'] = FieldValue.delete();
-      if (data.containsKey('affection'))
+      if (data.containsKey('affection')) {
         updates['affection'] = FieldValue.delete();
+      }
       if (data.containsKey('hygiene')) updates['hygiene'] = FieldValue.delete();
-      if (data.containsKey('lastMetricUpdateTime'))
+      if (data.containsKey('lastMetricUpdateTime')) {
         updates['lastMetricUpdateTime'] = FieldValue.delete();
+      }
 
       if (updates.isNotEmpty) {
         await docRef.update(updates);
@@ -248,14 +255,18 @@ class PetModel {
           !_isSameDay(_petData['lastTaskStatusResetDate'], now);
 
       // Reset interaction counts
-      if (!_isSameDay(_petData['lastPetDate'], now))
+      if (!_isSameDay(_petData['lastPetDate'], now)) {
         dailyResets['petsToday'] = 0;
-      if (!_isSameDay(_petData['lastFeedDate'], now))
+      }
+      if (!_isSameDay(_petData['lastFeedDate'], now)) {
         dailyResets['mealsToday'] = 0;
-      if (!_isSameDay(_petData['lastPlayDate'], now))
+      }
+      if (!_isSameDay(_petData['lastPlayDate'], now)) {
         dailyResets['playsToday'] = 0;
-      if (!_isSameDay(_petData['lastGroomDate'], now))
+      }
+      if (!_isSameDay(_petData['lastGroomDate'], now)) {
         dailyResets['groomsToday'] = 0;
+      }
 
       // Reset task status
       if (isNewDayForTasks) {

@@ -8,7 +8,7 @@ import 'test_result_screen.dart';
 class TestPage extends StatefulWidget {
   final String testType;
 
-  const TestPage({required this.testType, Key? key}) : super(key: key);
+  const TestPage({required this.testType, super.key});
 
   @override
   State<TestPage> createState() => _TestPageState();

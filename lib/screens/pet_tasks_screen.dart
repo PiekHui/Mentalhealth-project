@@ -36,12 +36,12 @@ class PetTasksScreen extends StatefulWidget {
   final VoidCallback onCoinsUpdated;
 
   const PetTasksScreen({
-    Key? key,
+    super.key,
     required this.petModel,
     required this.petData,
     required this.attendanceService,
     required this.onCoinsUpdated,
-  }) : super(key: key);
+  });
 
   @override
   State<PetTasksScreen> createState() => _PetTasksScreenState();

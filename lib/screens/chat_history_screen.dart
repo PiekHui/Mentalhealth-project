@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:intl/intl.dart'; // For date formatting
-import 'package:collection/collection.dart'; // For groupBy
+// For groupBy
 
 import '../main.dart'; // Import ChatMessage definition (if needed, or move ChatMessage to own file)
 import '../models/pet_model.dart'; // Import PetModel

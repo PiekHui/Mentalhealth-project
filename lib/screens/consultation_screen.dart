@@ -552,7 +552,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: selectedAge,
+                    initialValue: selectedAge,
                     items:
                         ageOptions
                             .map(
@@ -578,7 +578,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: selectedGender,
+                    initialValue: selectedGender,
                     items:
                         genderOptions
                             .map(
@@ -601,7 +601,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: selectedYear,
+                    initialValue: selectedYear,
                     items:
                         yearOptions
                             .map(

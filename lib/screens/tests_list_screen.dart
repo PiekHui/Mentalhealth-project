@@ -16,8 +16,8 @@ class TestPage extends StatefulWidget {
     required this.title,
     required this.description,
     required this.testType, // Changed from 'type' to 'testType'
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<TestPage> createState() => _TestPageState();
@@ -269,6 +269,8 @@ class _TestPageState extends State<TestPage> {
 }
 
 class TestsListScreen extends StatelessWidget {
+  const TestsListScreen({super.key});
+
   Future<void> _showTestInfo(BuildContext context, String type) async {
     try {
       final doc =

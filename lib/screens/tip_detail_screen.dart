@@ -157,7 +157,7 @@ class TipDetailScreen extends StatelessWidget {
                     ],
                   ),
                 );
-              }).toList(),
+              }),
             ],
             if (tip.articleUrl.isNotEmpty) ...[
               const SizedBox(height: 24),

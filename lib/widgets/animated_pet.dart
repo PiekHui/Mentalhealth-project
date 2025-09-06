@@ -11,13 +11,13 @@ class AnimatedPet extends StatefulWidget {
   final Map<String, dynamic>? petData; // Add pet data to control animations based on metrics
   
   const AnimatedPet({
-    Key? key,
+    super.key,
     required this.status,
     required this.onPet,
     required this.onFeed,
     this.size = 200,
     this.petData,
-  }) : super(key: key);
+  });
 
   @override
   State<AnimatedPet> createState() => AnimatedPetState();

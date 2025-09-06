@@ -56,7 +56,7 @@ class TestService {
       print('Test result saved successfully');
     } catch (e) {
       print('Error saving test result: $e');
-      throw e;
+      rethrow;
     }
   }
 

@@ -23,13 +23,13 @@ class TestResultScreen extends StatelessWidget {
     required this.testDate,
     required this.tips,
     required this.testType,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     String formattedDate =
-        "${testDate.toLocal().toString().split('.')[0].substring(0, 16)}";
+        testDate.toLocal().toString().split('.')[0].substring(0, 16);
 
     // Save test to history
     TestHistory.addTest(

@@ -458,8 +458,9 @@ class AttendanceService {
   }
 
   Future<void> addCoins(int amount) async {
-    if (_userId == null || _userId!.isEmpty || amount <= 0)
+    if (_userId == null || _userId!.isEmpty || amount <= 0) {
       return; // Basic validation
+    }
 
     // --- Option 1: Update Firestore Directly (Recommended for persistence) ---
     final userDocRef = _firestore

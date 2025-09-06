@@ -74,7 +74,7 @@ class GeminiService {
       return text ?? 'I\'m here for you! Would you like to tell me more about how you\'re feeling?';
     } catch (e) {
       _logger.severe('Error getting chat response', e);
-      throw e;
+      rethrow;
     }
   }
 

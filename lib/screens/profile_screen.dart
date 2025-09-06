@@ -35,7 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_currentUser == null) return;
 
     final newDisplayName = _displayNameController.text.trim();
-    if (newDisplayName == _currentUser?.displayName) {
+    if (newDisplayName == _currentUser.displayName) {
       // No changes made
       ScaffoldMessenger.of(
         context,
@@ -48,7 +48,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     try {
-      await _currentUser!.updateDisplayName(newDisplayName);
+      await _currentUser.updateDisplayName(newDisplayName);
       // Optional: Update Firestore user document if you store display name there too
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -80,7 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Profile', style: GoogleFonts.fredoka()),
-        backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),

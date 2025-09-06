@@ -789,7 +789,7 @@ extension _AddTransaction on _BudgetListScreenState {
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: selectedCategory,
+                        initialValue: selectedCategory,
                         items:
                             (addingIncome ? _incomeCategories : _categories)
                                 .map(

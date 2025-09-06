@@ -21,9 +21,9 @@ class CategoryTipsScreen extends StatelessWidget {
     if (tips.isEmpty) {
       print('Tips list is empty!');
     } else {
-      tips.forEach((tip) {
+      for (var tip in tips) {
         print('Tip title: ${tip.title}');
-      });
+      }
     }
 
     return Scaffold(

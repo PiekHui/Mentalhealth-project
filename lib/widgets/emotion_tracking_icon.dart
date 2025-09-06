@@ -7,11 +7,11 @@ class EmotionTrackingIcon extends StatefulWidget {
   final VoidCallback onTap;
 
   const EmotionTrackingIcon({
-    Key? key,
+    super.key,
     required this.emotion,
     this.size = 60.0,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   State<EmotionTrackingIcon> createState() => _EmotionTrackingIconState();

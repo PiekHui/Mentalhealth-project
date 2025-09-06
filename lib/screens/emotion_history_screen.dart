@@ -9,7 +9,7 @@ import '../widgets/glass_card.dart';
 import '../widgets/emotion_tracking_icon.dart';
 
 class EmotionHistoryScreen extends StatefulWidget {
-  const EmotionHistoryScreen({Key? key}) : super(key: key);
+  const EmotionHistoryScreen({super.key});
 
   @override
   State<EmotionHistoryScreen> createState() => _EmotionHistoryScreenState();
@@ -518,12 +518,12 @@ class _AnimatedStatChip extends StatefulWidget {
   final Color color;
 
   const _AnimatedStatChip({
-    Key? key,
+    super.key,
     required this.emoji,
     required this.label,
     required this.value,
     required this.color,
-  }) : super(key: key);
+  });
 
   @override
   State<_AnimatedStatChip> createState() => _AnimatedStatChipState();

@@ -11,7 +11,7 @@ class GlassCard extends StatelessWidget {
   final double elevation;
 
   const GlassCard({
-    Key? key,
+    super.key,
     required this.child,
     this.padding,
     this.margin,
@@ -19,7 +19,7 @@ class GlassCard extends StatelessWidget {
     this.blurSigma = 16,
     this.opacity = 0.18,
     this.elevation = 0,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

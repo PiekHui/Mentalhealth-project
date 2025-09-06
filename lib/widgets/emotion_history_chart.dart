@@ -7,10 +7,10 @@ class EmotionHistoryChart extends StatelessWidget {
   final int daysToShow;
 
   const EmotionHistoryChart({
-    Key? key,
+    super.key,
     required this.emotionHistory,
     this.daysToShow = 7,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

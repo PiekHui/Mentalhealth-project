@@ -49,7 +49,7 @@ class TestHistory {
     };
   }
 
-  static List<TestHistory> _history = [];
+  static final List<TestHistory> _history = [];
 
   static List<TestHistory> get history =>
       List.from(_history.reversed); // Return reversed list for newest first
