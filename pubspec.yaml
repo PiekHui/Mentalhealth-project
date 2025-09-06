@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  model_viewer_plus: ^1.8.0
   flutter_localizations:
     sdk: flutter
   provider: ^6.1.1
@@ -62,6 +63,8 @@ dependencies:
   uuid: ^4.3.3
   fl_chart: ^1.1.0
   month_picker_dialog: ^6.5.0
+  flutter_3d_controller: ^2.2.0
+  vector_math: ^2.2.0
 
 dev_dependencies:
   flutter_test:
@@ -82,12 +85,14 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  uses-material-design: true
   assets:
     - assets/logoremovebg.png
+    - assets/3d_models/
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
-  uses-material-design: true
+  
 platforms:
   android:
   ios:

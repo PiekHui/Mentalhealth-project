@@ -28,6 +28,9 @@ import 'screens/budget_list_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart'; // Add for date formatting
 import 'package:shared_preferences/shared_preferences.dart';
+import 'widgets/glb_pet_widget.dart';
+import 'package:model_viewer_plus/model_viewer_plus.dart';
+import 'package:flutter/material.dart';
 
 // --- Import new screens ---
 import 'screens/profile_screen.dart';
@@ -214,7 +217,29 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final TextEditingController _chatController = TextEditingController();
   final GeminiService _geminiService = GeminiService();
   final OpenRouterService _openRouterService = OpenRouterService();
-  // Removed inline chat; using dedicated ChatScreen
+  String _currentAnimation = 'model';
+
+  // Helper to trigger animation
+  void _triggerPetAnimation(String animationName) {
+    setState(() {
+      _currentAnimation = 'model';
+    });
+    // Also trigger the GLBPetWidget animation
+    switch (animationName) {
+      case 'pet':
+        _animatedPetKey.currentState?.triggerPet();
+        break;
+      case 'feed':
+        _animatedPetKey.currentState?.triggerFeed();
+        break;
+      case 'play':
+        _animatedPetKey.currentState?.triggerPlay();
+        break;
+      case 'groom':
+        _animatedPetKey.currentState?.triggerGroom();
+        break;
+    }
+  }
 
   dynamic _getAi() {
     // Simple provider switch via Env.aiProvider
@@ -393,8 +418,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       {}; // Store remaining durations for display
 
   // --- Fix GlobalKey type ---
-  final GlobalKey<AnimatedPetState> _animatedPetKey =
-      GlobalKey<AnimatedPetState>(); // Use the public 'AnimatedPetState'
+  final GlobalKey<GLBPetWidgetState> _animatedPetKey =
+      GlobalKey<GLBPetWidgetState>();
+  // Use the public 'AnimatedPetState'
 
   String get _userId => FirebaseAuth.instance.currentUser?.uid ?? '';
 
@@ -627,15 +653,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       return;
     }
     print('[_petThePet] Button pressed.');
+
+    // Always trigger animation, even if AI fails
+    _triggerPetAnimation('pet');
+
     try {
       await _petModel.petPet();
       print('[_petThePet] _petModel.petPet() completed.');
       _petData = await _petModel.loadPetData();
       print('[_petThePet] _petModel.loadPetData() completed.');
-
-      // --- ADD Animation Trigger ---
-      _animatedPetKey.currentState?.triggerPet();
-      // --- END ADD ---
 
       _updatePetStatsFromData();
       _updateCooldownTimer('pet');
@@ -659,15 +685,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       return;
     }
     print('[_feedThePet] Button pressed.');
+
+    // Always trigger animation, even if AI fails
+    _triggerPetAnimation('feed');
+
     try {
       await _petModel.feedPet();
       print('[_feedThePet] _petModel.feedPet() completed.');
       _petData = await _petModel.loadPetData();
       print('[_feedThePet] _petModel.loadPetData() completed.');
-
-      // --- ADD Animation Trigger ---
-      _animatedPetKey.currentState?.triggerFeed();
-      // --- END ADD ---
 
       _updatePetStatsFromData();
       _updateCooldownTimer('feed');
@@ -691,13 +717,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       return;
     }
     print('[_playWithPet] Button pressed.');
+
+    // Always trigger animation, even if AI fails
+    _triggerPetAnimation('play');
+
     try {
       await _petModel.playWithPet();
       print('[_playWithPet] _petModel.playWithPet() completed.');
       _petData = await _petModel.loadPetData();
       print('[_playWithPet] _petModel.loadPetData() completed.');
-
-      _animatedPetKey.currentState?.triggerPlay();
 
       _updatePetStatsFromData();
       _updateCooldownTimer('play');
@@ -721,13 +749,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       return;
     }
     print('[_groomPet] Button pressed.');
+
+    // Always trigger animation, even if AI fails
+    _triggerPetAnimation('groom');
+
     try {
       await _petModel.groomPet();
       print('[_groomPet] _petModel.groomPet() completed.');
       _petData = await _petModel.loadPetData();
       print('[_groomPet] _petModel.loadPetData() completed.');
-
-      _animatedPetKey.currentState?.triggerGroom();
 
       _updatePetStatsFromData();
       _updateCooldownTimer('groom');
@@ -1323,12 +1353,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                       ),
                                     ],
                                   ),
-                                  child: AnimatedPet(
+                                  child: GLBPetWidget(
                                         key: _animatedPetKey,
                                         status: _petStatus,
                                         onPet: _petThePet,
                                         onFeed: _feedThePet,
-                                        size: constraints.maxWidth * 0.50,
+                                        onPlay: _playWithPet,
+                                        onGroom: _groomPet,
+
+                                        size: constraints.maxWidth * 0.60,
                                         petData:
                                             _petData.isNotEmpty
                                                 ? _petData
@@ -1494,10 +1527,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                         _buildFeatureButton(
                                           icon: Icons.pets,
                                           label: 'Pet',
-                                          onPressed:
-                                              isPettingOnCooldown
-                                                  ? null
-                                                  : _petThePet,
+                                          onPressed: () {
+                                            _animatedPetKey.currentState
+                                                ?.triggerPet();
+                                          },
+
+                                          // isPettingOnCooldown
+                                          //     ? null
+                                          //     : _petThePet,
                                           color: Colors.purple,
                                           size: isSmallScreen ? 28 : 34,
                                           disabled: isPettingOnCooldown,
@@ -1508,11 +1545,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                         _buildFeatureButton(
                                           icon: Icons.sports_esports,
                                           label: 'Play',
-                                          onPressed:
-                                              (isPlayingOnCooldown ||
-                                                      _petData.isEmpty)
-                                                  ? null
-                                                  : _playWithPet,
+                                          onPressed: () {
+                                            _animatedPetKey.currentState
+                                                ?.triggerPlay();
+                                          },
+                                          // (isPlayingOnCooldown ||
+                                          //         _petData.isEmpty)
+                                          //     ? null
+                                          //     : _playWithPet,
                                           color: Colors.blue,
                                           size: isSmallScreen ? 28 : 34,
                                           disabled: isPlayingOnCooldown,
@@ -1523,10 +1563,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                         _buildFeatureButton(
                                           icon: Icons.restaurant,
                                           label: 'Feed',
-                                          onPressed:
-                                              isFeedingOnCooldown
-                                                  ? null
-                                                  : _feedThePet,
+                                          onPressed: () {
+                                            _animatedPetKey.currentState
+                                                ?.triggerFeed();
+                                          },
+                                          // isFeedingOnCooldown
+                                          //     ? null
+                                          //     : _feedThePet,
                                           color: Colors.orange,
                                           size: isSmallScreen ? 28 : 34,
                                           disabled: isFeedingOnCooldown,
@@ -1537,11 +1580,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                         _buildFeatureButton(
                                           icon: Icons.cleaning_services,
                                           label: 'Groom',
-                                          onPressed:
-                                              (isGroomingOnCooldown ||
-                                                      _petData.isEmpty)
-                                                  ? null
-                                                  : _groomPet,
+                                          onPressed: () {
+                                            _animatedPetKey.currentState
+                                                ?.triggerGroom();
+                                          },
+                                          // (isGroomingOnCooldown ||
+                                          //         _petData.isEmpty)
+                                          //     ? null
+                                          //     : _groomPet,
                                           color: Colors.green,
                                           size: isSmallScreen ? 28 : 34,
                                           disabled: isGroomingOnCooldown,
