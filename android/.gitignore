@@ -12,3 +12,14 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Flutter/Dart
+/build/
+.dart_tool/
+/.packages
+pubspec.lock
+
+# Android
+/android/app/build/
+/*.apk
+/*.aab
