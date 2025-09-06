@@ -125,7 +125,7 @@ class MyApp extends StatelessWidget {
                 ).onPrimaryContainer,
           ),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 5,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
