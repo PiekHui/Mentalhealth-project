@@ -31,6 +31,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'widgets/glb_pet_widget.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 import 'package:flutter/material.dart';
+import 'screens/unlockpetspage_screen.dart';
 
 // --- Import new screens ---
 import 'screens/profile_screen.dart';
@@ -96,7 +97,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'PetPause',
+      title: 'UniPaw',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlueAccent),
         useMaterial3: true,
@@ -167,7 +168,7 @@ class MyApp extends StatelessWidget {
           }
 
           if (snapshot.hasData) {
-            return const MyHomePage(title: 'PetPause');
+            return const MyHomePage(title: 'UniPaw');
           }
 
           return const AuthWrapper();
@@ -1164,7 +1165,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Row(
           children: [
-            Image.asset('assets/logoremovebg.png', height: 50, width: 60),
+            Image.asset('assets/unipawlogo.png', height: 50, width: 60),
             const SizedBox(width: 4),
             Text(
               widget.title,
@@ -1598,6 +1599,22 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                           cooldownRemaining:
                                               groomCooldownRemaining,
                                         ),
+                                        const SizedBox(height: 8),
+                                        _buildFeatureButton(
+                                          icon: Icons.pets,
+                                          label: 'Unlock',
+                                          onPressed: () {
+                                            Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => const UnlockPetsPage(),
+                                            ),
+                                          );
+                                        },
+                                        color: Colors.brown,
+                                        size: isSmallScreen ? 28 : 34,
+                                        disabled: false, 
+                                        ),
                                       ],
                                     ),
                                   ],
@@ -1932,7 +1949,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               // --- Replace Help & Support with Peer Support ---
               IconButton(
                 tooltip: 'Consultation',
-                icon: const Icon(Icons.group),
+                icon: const Icon(Icons.medical_services),
                 onPressed: () {
                   Navigator.push(
                     context,
