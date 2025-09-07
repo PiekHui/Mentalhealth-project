@@ -35,7 +35,7 @@ UniPaw is a Flutter-based mobile application that serves as a digital companion 
 4.  **Support:** The Help section provides immediate connections to external resources.
 5.  **Personalization:** Earn coins through activities to (eventually) customize the pet.
 6.  **Management:** Access profile, settings, and account management options via the top-right menu.
-7.  **YouTube:** link
+7.  **YouTube:** [link](https://youtu.be/js0eHzEhPVE)
 
 ## 🛠️ Architecture
 
