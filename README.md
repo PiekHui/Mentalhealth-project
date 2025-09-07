@@ -1,32 +1,30 @@
-# 🐇 PetPause: Pause, Breathe, and Calm
+# 🐇 UniPaw - Your Digital Pet, Your Uni Life Companion
 
-PetPause is a mobile application designed to provide accessible mental health support and promote emotional well-being through interactive features and AI assistance.
+UniPaw is a mobile application designed to provide accessible mental health support for university students and promote emotional well-being through interactive features and AI assistance, helping students cope with the demands of university life.
 
 ## 🔍 Problem Statement
 
-Mental health issues like depression, anxiety, and stress are increasingly prevalent globally. Stigma and limited access to resources prevent many individuals from seeking necessary help. With over 280 million people affected by depression alone, there is a critical need for accessible and supportive mental wellness solutions. PetPause aims to address this gap by offering immediate access to mental health resources, fostering daily engagement through a virtual companion, and bridging the path to professional care.
-
-## 🌍 SDG Alignment
-
-This project directly aligns with **UN Sustainable Development Goal 3: Good Health and Well-Being**. Specifically, it contributes to:
-*   **Target 3.4:** Promoting mental health and well-being by encouraging proactive self-care.
-*   **Target 3.8:** Improving access to essential health-care services through digital means.
+Mental health issues like depression, anxiety, and stress are increasingly prevalent globally, including those caused by academic pressure and the demands of campus life. Stigma and limited access to resources prevent many individuals from seeking necessary help. With over 280 million people affected by depression alone, there is a critical need for accessible and supportive mental wellness solutions. UniPaw aims to address this gap by offering immediate access to mental health resources, fostering daily engagement through a virtual pet companion, and bridging the path to professional care and academic support.
 
 ## 💡 Solution Overview
 
-PetPause is a Flutter-based mobile application that serves as a digital companion for mental wellness. It utilizes Firebase for backend services (data storage, authentication) and integrates Google's Gemini AI for interactive chat support.
+UniPaw is a Flutter-based mobile application that serves as a digital companion with animations for mental wellness. It utilizes Firebase for backend services (data storage, authentication) and integrates Google's Gemini AI and OpenRouter for interactive chat support. Other features like a calendar planner, focus timer, peer support and consultation, and budget tracker provide more balanced academic control. What truly sets us apart is that everything you need to thrive as a student is right here, all in one app.
 
 ## ✨ Features
 
-*   **Virtual Pet:** A central interactive pet whose appearance changes based on its happiness level, reflecting user engagement.
-*   **Daily Check-In:** Log daily feelings, view entries on a calendar, and earn coins for pet customization.
-*   **Help Section:** Provides quick access to helplines, counseling services, and nearby hospitals (via Google Maps integration) with direct call, email, and WhatsApp options.
-*   **Pet Tasks:** Engage in simple activities like feeding the pet or writing in the diary to earn coins, relieve stress, and increase the pet's happiness.
-*   **Stress Assessments:** Complete tests to receive scores, results, and helpful tips. Results are tracked over time.
+*   **Virtual Pet:** A central interactive pet whose appearance and animations change based on user interactions, reflecting engagement.
+*   **Pet Interaction:** Buttons for quick interactions like playing with or talking to the pet using chatbox.
+*   **Pet Tasks:** Engage in simple activities like playing with the pet or writing in the diary to earn coins, relieve stress, and increase the pet's happiness.
+*   **Stress Assessments(Test):** Complete tests to receive scores, results, and helpful tips. Results are tracked over time.
 *   **My Diary:** A private digital journal for personal reflection.
-*   **Pet Interaction:** Buttons for quick interactions like playing with or talking to the pet.
-*   **Mental Health Tips:** Access self-care practices and healthy habits with step-by-step guidance and links to further resources.
-*   **AI-Powered Chat:** Talk to your pet via a chat bar, powered by Gemini AI. Includes safety alerts for concerning keywords and stores chat history.
+*   **Help Section:** Provides quick access to helplines, counseling services, and nearby hospitals (via Google Maps integration) with direct call, email, and WhatsApp options.
+*   **Daily Check-In:** Log daily feelings, view entries on a calendar, and earn coins for pet customization.
+*   **Budget Tracker:** Record all expenses or income and get a monthly summary chart to control the budget.
+*   **Consultation:** Easily find professionals, book appointments, and text with them directly.
+*   **AI-Powered Chat:** Talk to your pet via a chat bar powered by Gemini AI and OpenRouter. Includes safety alerts for concerning keywords, stores chat history, reads your calendar, and suggests new dates for upcoming meetings or events.
+*   **Unlock New Pet:** Collect coins to unlock new pets for entertainment.
+*   **Focus Timer:** Set study countdowns to stay focused on academics.
+*   **Calendar Planner:** Record important assignments, tests, exams, and events with reminders, and check your schedule at a glance.
 *   **App Language:** Options for English, Malay, and Mandarin (Note: Malay and Mandarin translations are planned for future updates).
 
 ## ▶️ Showcase / How It Works
@@ -37,19 +35,19 @@ PetPause is a Flutter-based mobile application that serves as a digital companio
 4.  **Support:** The Help section provides immediate connections to external resources.
 5.  **Personalization:** Earn coins through activities to (eventually) customize the pet.
 6.  **Management:** Access profile, settings, and account management options via the top-right menu.
-7.  **YouTube:** https://youtu.be/ZHtVwBK381E
+7.  **YouTube:** link
 
 ## 🛠️ Architecture
 
 *   **Frontend:** Flutter
 *   **Backend:** Firebase (Authentication, Firestore/Realtime Database)
-*   **AI:** Google Gemini API
+*   **AI:** Google Gemini API, OpenRouter
 *   **Mapping:** Google Maps API
 *   **Communication:** Gmail API (for password reset emails)
 
 ## 🎯 Our Goal
 
-PetPause aims to be more than just an app; it's designed to be a digital companion that heals, supports, and grows with its users. We strive to create a space where individuals feel heard, understood, and motivated to prioritize their mental well-being daily.
+UniPaw aims to be more than just an app; it's designed to be a digital companion that heals, supports, and grows with its users. We strive to create a space where individuals feel heard, understood, and motivated to prioritize their mental well-being daily.
 
 ## Getting Started (Environment Setup)
 
