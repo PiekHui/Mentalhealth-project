@@ -177,14 +177,11 @@ class _AttendanceCalendarState extends State<AttendanceCalendar> {
       final isFutureDate = date.isAfter(now);
 
       return GestureDetector(
-        onTap:
-            isFutureDate
-                ? null
-                : () {
-                  if (widget.onDaySelected != null) {
-                    widget.onDaySelected!(date);
-                  }
-                },
+        onTap: () {
+          if (widget.onDaySelected != null) {
+            widget.onDaySelected!(date);
+          }
+        },
         child: Container(
           width: 36,
           height: 36,

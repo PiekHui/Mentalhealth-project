@@ -9,6 +9,9 @@ import '../main.dart'; // For ChatMessage
 import '../services/gemini_service.dart';
 import '../services/openrouter_service.dart';
 import '../config/env.sample.dart';
+import '../services/calendar_service.dart';
+import '../models/calendar_event.dart';
+import 'focus_timer_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -26,6 +29,8 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isTyping = false;
   final GeminiService _geminiService = GeminiService();
   final OpenRouterService _openRouterService = OpenRouterService();
+  final CalendarService _calendarService = CalendarService();
+  List<DateTime> _lastSuggestedSlots = const [];
 
   dynamic _getAi() {
     if (Env.aiProvider == 'openrouter') {
@@ -364,6 +369,149 @@ class _ChatScreenState extends State<ChatScreen> {
       _isTyping = true;
     });
     try {
+      // Quick intent: upcoming events
+      final lower = text.toLowerCase();
+      final bool asksForEvent =
+          lower.contains('upcoming event') ||
+          lower.contains('next event') ||
+          lower.contains('what\'s on my calendar') ||
+          lower.contains('what is on my calendar') ||
+          lower.contains('any events') ||
+          lower.contains('calendar');
+
+      if (asksForEvent) {
+        final CalendarEvent? next =
+            await _calendarService.getNextUpcomingEvent();
+        String replyText;
+        if (next == null) {
+          replyText = "I couldn't find any upcoming events in your calendar.";
+        } else {
+          replyText =
+              "Your next event is: ${_calendarService.formatEvent(next)}.";
+        }
+
+        final reply = ChatMessage(
+          text: replyText,
+          isUser: false,
+          timestamp: DateTime.now(),
+        );
+        setState(() {
+          _todayMessages.add(reply);
+          _isTyping = false;
+        });
+        _scrollToBottom();
+        await _petModel.saveChatMessage({
+          'text': reply.text,
+          'isUser': false,
+          'timestamp': DateTime.now(),
+        });
+        return;
+      }
+
+      // Quick intent: suggest scheduling new meeting slots
+      final bool asksToSchedule =
+          lower.contains('schedule') ||
+          lower.contains('arrange') ||
+          lower.contains('new meeting') ||
+          lower.contains('book a time') ||
+          lower.contains('find a time') ||
+          lower.contains('free day') ||
+          lower.contains('free time');
+
+      if (asksToSchedule) {
+        final slots = await _calendarService.suggestMeetingSlots(
+          daysToScan: 14,
+          maxSuggestions: 3,
+        );
+        _lastSuggestedSlots = slots;
+        String suggestions;
+        if (slots.isEmpty) {
+          suggestions =
+              'I didn\'t find clear free days in the next couple of weeks.';
+        } else {
+          final parts = slots.map(_calendarService.formatSlot).toList();
+          final numbered = parts
+              .asMap()
+              .entries
+              .map((e) => 'Option ${e.key + 1}: ${e.value}')
+              .join('; ');
+          suggestions = 'Here are some options: $numbered';
+        }
+
+        final supportive =
+            "And a gentle reminder: make space to rest when you can. You\'re doing your best—no need to carry it all at once. I\'m cheering for you!";
+        final replyText =
+            '$suggestions\n\nReply with: Option 1 / 2 / 3 to confirm.\n\n$supportive';
+
+        final reply = ChatMessage(
+          text: replyText,
+          isUser: false,
+          timestamp: DateTime.now(),
+        );
+        setState(() {
+          _todayMessages.add(reply);
+          _isTyping = false;
+        });
+        _scrollToBottom();
+        await _petModel.saveChatMessage({
+          'text': reply.text,
+          'isUser': false,
+          'timestamp': DateTime.now(),
+        });
+        return;
+      }
+
+      // Quick intent: open focus timer
+      final bool asksFocusTimer =
+          lower.contains('focus timer') ||
+          lower.contains('pomodoro') ||
+          lower.contains('study timer') ||
+          lower.contains('countdown for study');
+      if (asksFocusTimer) {
+        setState(() {
+          _isTyping = false;
+        });
+        if (!mounted) return;
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const FocusTimerScreen()));
+        return;
+      }
+
+      // Quick intent: user confirms a suggested option number
+      final optionMatch = RegExp(
+        r'\b(option|opt|choice)\s*(\d)\b',
+      ).firstMatch(lower);
+      if (optionMatch != null && _lastSuggestedSlots.isNotEmpty) {
+        final idx = int.tryParse(optionMatch.group(2) ?? '') ?? 0;
+        if (idx >= 1 && idx <= _lastSuggestedSlots.length) {
+          final chosen = _lastSuggestedSlots[idx - 1];
+          await _calendarService.saveEvent(
+            id: chosen.millisecondsSinceEpoch.toString(),
+            title: 'Meeting',
+            notes: 'Added from chat',
+            dateTime: chosen,
+          );
+          final reply = ChatMessage(
+            text:
+                'Great! I\'ve added “Meeting” on ${_calendarService.formatSlot(chosen)}.',
+            isUser: false,
+            timestamp: DateTime.now(),
+          );
+          setState(() {
+            _todayMessages.add(reply);
+            _isTyping = false;
+          });
+          _scrollToBottom();
+          await _petModel.saveChatMessage({
+            'text': reply.text,
+            'isUser': false,
+            'timestamp': DateTime.now(),
+          });
+          return;
+        }
+      }
+
       final petData = await _petModel.loadPetData();
       final int happiness = petData['happiness'] as int? ?? 50;
       final String status = (petData['mood'] as String?) ?? 'Normal';

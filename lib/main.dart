@@ -1,6 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
+import 'screens/focus_timer_screen.dart';
+import 'screens/calendar_planner_screen.dart';
+import 'services/notification_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
@@ -71,6 +74,7 @@ class PetTask {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await NotificationService.instance.init();
   // Increment app usage count
   final prefs = await SharedPreferences.getInstance();
   int usageCount = prefs.getInt('appUsageCount') ?? 0;
@@ -156,6 +160,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
+      routes: {'/calendar': (_) => const CalendarPlannerScreen()},
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
@@ -1181,6 +1186,21 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
         actions: [
+          IconButton(
+            tooltip: 'Focus Timer',
+            icon: const Icon(Icons.timer_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FocusTimerScreen()),
+              );
+            },
+          ),
+          IconButton(
+            tooltip: 'Planner',
+            icon: const Icon(Icons.event_note),
+            onPressed: () => Navigator.of(context).pushNamed('/calendar'),
+          ),
           PopupMenuButton<String>(
             color: Theme.of(context).colorScheme.surface,
             shape: RoundedRectangleBorder(
@@ -1605,15 +1625,17 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                                           label: 'Unlock',
                                           onPressed: () {
                                             Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => const UnlockPetsPage(),
-                                            ),
-                                          );
-                                        },
-                                        color: Colors.brown,
-                                        size: isSmallScreen ? 28 : 34,
-                                        disabled: false, 
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (context) =>
+                                                        const UnlockPetsPage(),
+                                              ),
+                                            );
+                                          },
+                                          color: Colors.brown,
+                                          size: isSmallScreen ? 28 : 34,
+                                          disabled: false,
                                         ),
                                       ],
                                     ),
